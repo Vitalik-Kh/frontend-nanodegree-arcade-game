@@ -9,8 +9,8 @@
  * drawn but that is not the case. What's really happening is the entire "scene"
  * is being drawn over and over, presenting the illusion of animation.
  *
- * This engine makes the canvas' context (ctx) object globally available to make 
- * writing app.js a little simpler to work with.
+ * This engine makes the canvas' context (ctx) object globally available to make
+ * writing app.js a little simpler to work with.;
  */
 
 var Engine = (function(global) {
@@ -27,6 +27,8 @@ var Engine = (function(global) {
     canvas.width = 505;
     canvas.height = 606;
     doc.body.appendChild(canvas);
+    ctx.font = '20px Arial';
+    ctx.fillStyle = "#fff";
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
@@ -46,7 +48,7 @@ var Engine = (function(global) {
          */
         update(dt);
         render();
-
+        displayLevel();
         /* Set our lastTime variable which is used to determine the time delta
          * for the next time this function is called.
          */
@@ -79,7 +81,8 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
+        checkFinish();
     }
 
     /* This is called by the update function and loops through all of the
@@ -94,6 +97,49 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+    }
+
+    function checkCollisions() {
+        allEnemies.forEach(function(enemy) {
+            if (player.x >= enemy.x-55 &&
+                player.x <= enemy.x+55 &&
+                player.y == enemy.y) {
+                player.reset();
+                changeLevel('down');
+            }
+        });
+    }
+
+    function checkFinish() {
+        if (player.y < 61) {
+            player.reset();
+            changeLevel('up');
+        }
+    }
+
+    function changeLevel(direction) {
+        if (direction == 'up' && level < 6) {
+            level++;
+            createEnemies();
+            changeSpeed();
+        } else if (direction == 'down' && level > 2) {
+            level--;
+            createEnemies();
+            changeSpeed();
+        }
+
+    }
+
+    function changeSpeed() {
+        allEnemies.forEach(function(enemy) {
+            for(i=0; i<6; i++) {
+                enemy.speed_arr[i] += level*20;
+            }
+        })
+    }
+
+    function displayLevel() {
+        ctx.fillText('Level: '+ (level-1), canvas.width -85,80);
     }
 
     /* This function initially draws the "game level", it will then call
